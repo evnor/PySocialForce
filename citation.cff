@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - given-names: Paul
+    name-particle: van der
+    family-names: Horst
+    email: p.l.v.d.horst@student.tue.nl
+    affiliation: Eindhoven University of Technology
+  - given-names: Yuxiang
+    family-names: Gao
+    affiliation: Johns Hopkins University
+    email: yuxiang.gao@jhu.edu
+    orcid: 'https://orcid.org/0000-0001-6183-2482'
+  - given-names: Sven
+    family-names: Kreiss
+    orcid: 'https://orcid.org/0000-0002-2246-5680'
+  - given-names: Parth
+    family-names: Kothari
+title: "PySocialForce"
+version: 1.0.0
+doi: 10.5281/zenodo.1234
+date-released: 2021-12-13
+url: "https://github.com/evnor/PySocialForce"
