@@ -1,4 +1,4 @@
-"""This module tracks the state odf scene and scen elements like pedestrians, groups and obstacles"""
+"""This module tracks the state of scene and scene elements like pedestrians, groups and obstacles"""
 from typing import List
 
 import numpy as np
@@ -7,9 +7,9 @@ from pysocialforce.utils import stateutils
 
 
 class PedState:
-    """Tracks the state of pedstrains and social groups"""
+    """Tracks the state of pedestrians and social groups"""
 
-    def __init__(self, state, groups, config):
+    def __init__(self, state, goals, groups, config):
         self.default_tau = config("tau", 0.5)
         self.step_width = config("step_width", 0.4)
         self.agent_radius = config("agent_radius", 0.35)
@@ -20,6 +20,7 @@ class PedState:
 
         self.ped_states = []
         self.group_states = []
+        self.goals = goals
 
         self.update(state, groups)
 
@@ -57,6 +58,12 @@ class PedState:
 
     def goal(self) -> np.ndarray:
         return self.state[:, 4:6]
+    
+    def set_goal(self, goal: np.ndarray):
+        self.state[:,4:6] = goal
+
+    def next_goal(self) -> np.ndarray:
+        return self.goals[:, :2]
 
     def tau(self):
         return self.state[:, 6:7]
@@ -71,7 +78,7 @@ class PedState:
         desired_velocity = self.vel() + self.step_width * force
         desired_velocity = self.capped_velocity(desired_velocity, self.max_speeds)
         # stop when arrived
-        desired_velocity[stateutils.desired_directions(self.state)[1] < 0.5] = [0, 0]
+        # desired_velocity[stateutils.desired_directions(self.state)[1] < 0.5] = [0, 0]
 
         # update state
         next_state = self.state
