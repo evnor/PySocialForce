@@ -7,6 +7,7 @@ See Helbing and Molnár 1998 and Moussaïd et al. 2010
 from pysocialforce.utils import DefaultConfig
 from pysocialforce.scene import PedState, EnvState
 from pysocialforce import forces
+import numpy as np
 
 
 class Simulator:
@@ -55,6 +56,8 @@ class Simulator:
         # construct forces
         self.forces = self.make_forces(self.config)
 
+        self.autonomy = []
+
     def make_forces(self, force_configs):
         """Construct forces"""
         force_list = [
@@ -71,6 +74,13 @@ class Simulator:
         ]
         if self.scene_config("enable_group"):
             force_list += group_forces
+        
+        self.autonomous_forces = [
+            forces.DesiredForce, 
+            forces.GroupCoherenceForceAlt,
+            forces.GroupRepulsiveForce,
+            forces.GroupGazeForceAlt
+        ]
 
         # initiate forces
         for force in force_list:
@@ -80,7 +90,21 @@ class Simulator:
 
     def compute_forces(self):
         """compute forces"""
-        return sum(map(lambda x: x.get_force(), self.forces))
+        result = None
+        total_force = None
+        total_aut_force = None
+        mask = self.get_non_boarded_mask()
+        for force in self.forces:
+            f = force.get_force()
+            result = f if result is None else f+result
+            mag = np.linalg.norm(f[mask], axis=1)
+            total_force = mag if total_force is None else mag+total_force
+            if any(isinstance(force, aut_force) for aut_force in self.autonomous_forces):
+                total_aut_force = mag if total_aut_force is None else mag+total_aut_force
+        # self.autonomy.append(np.linalg.norm(total_aut_force[mask], axis=1)/np.linalg.norm(total_force[mask], axis=1))
+        self.autonomy.append(total_aut_force/total_force)
+        return result
+        # return sum(map(lambda x: x.get_force(), self.forces))
 
     def get_states(self):
         """Expose whole state"""
@@ -96,6 +120,17 @@ class Simulator:
     def step_once(self):
         """step once"""
         self.peds.step(self.compute_forces())
+
+    def get_non_boarded_mask(self):
+        return np.squeeze(np.concatenate((self.get_states()[0][-1, self.go_out_train:, 1:2] > -1, self.get_states()[0][-1, :self.go_out_train, 1:2] < 4), axis=0))
+        
+    def simulate_boarding(self, go_out_train):
+        N_steps = 0
+        self.go_out_train = go_out_train
+        while np.any(self.get_non_boarded_mask()):
+            self.step()
+            N_steps += 1
+        return N_steps
 
     def step(self, n=1):
         """Step n time"""
