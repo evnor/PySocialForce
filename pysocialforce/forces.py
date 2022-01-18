@@ -136,6 +136,8 @@ class GroupRepulsiveForce(Force):
         if self.peds.has_group():
             for group in self.peds.groups:
                 size = len(group)
+                if size <= 1:
+                    continue
                 member_pos = self.peds.pos()[group, :]
                 diff = stateutils.each_diff(member_pos)  # others - self
                 _, norms = stateutils.normalize(diff)
